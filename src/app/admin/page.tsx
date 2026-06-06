@@ -8,6 +8,10 @@ import { ExpenseBreakdown } from "@/components/admin/expense-breakdown";
 import { YearSelector } from "@/components/admin/year-selector";
 import { ReceiptJapaneseYen } from "lucide-react";
 
+// 常に最新の Google Sheets データを参照する（ビルド時の静的生成を無効化）
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminPage({
     searchParams
 }: {

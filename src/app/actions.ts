@@ -97,7 +97,7 @@ ${data.receipt_required ? `🧾 領収書: 希望あり（宛名: ${data.receipt
     };
     sendOrderConfirmationEmail(tempOrder, product).catch(console.error);
 
-    revalidatePath('/factory')
+    revalidatePath('/factory', 'layout')
     revalidatePath('/admin')
 }
 
@@ -163,7 +163,7 @@ ${data.receipt_required ? `🧾 領収書: 希望あり（宛名: ${data.receipt
 
     // Skip order confirmation email as per user request.
 
-    revalidatePath('/factory')
+    revalidatePath('/factory', 'layout')
     revalidatePath('/admin')
 }
 
@@ -186,7 +186,7 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
         }
     }
 
-    revalidatePath('/factory')
+    revalidatePath('/factory', 'layout')
     revalidatePath('/admin')
 }
 
@@ -206,7 +206,7 @@ export async function completeShipping(id: string, advancedShippingCost: number)
         }
     }
 
-    revalidatePath('/factory')
+    revalidatePath('/factory', 'layout')
     revalidatePath('/admin')
 }
 
@@ -225,7 +225,7 @@ export async function updatePaymentStatus(id: string, status: "未入金" | "入
         }
     }
 
-    revalidatePath('/factory')
+    revalidatePath('/factory', 'layout')
     revalidatePath('/admin')
 }
 
@@ -267,7 +267,7 @@ export async function payWorkers(
     }
 
     revalidatePath('/admin');
-    revalidatePath('/factory');
+    revalidatePath('/factory', 'layout');
 }
 
 export async function addAdvanceExpense(data: { date: string; category: string; amount: number; description: string }) {
@@ -277,20 +277,20 @@ export async function addAdvanceExpense(data: { date: string; category: string; 
         is_advance_paid: false,
     });
     revalidatePath('/admin');
-    revalidatePath('/factory');
+    revalidatePath('/factory', 'layout');
     revalidatePath('/expenses');
 }
 
 export async function deleteOrder(id: string) {
     await googleSheetsService.deleteOrder(id);
-    revalidatePath('/factory');
+    revalidatePath('/factory', 'layout');
     revalidatePath('/admin');
 }
 
 
 export async function updateOrder(id: string, data: Partial<Order>) {
     await googleSheetsService.updateOrder(id, data);
-    revalidatePath('/factory');
+    revalidatePath('/factory', 'layout');
     revalidatePath('/admin');
 }
 

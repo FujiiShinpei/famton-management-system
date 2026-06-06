@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { getProducts } from "@/app/actions";
 import { ProxyOrderForm } from "@/components/factory/proxy-order-form";
 
+// 常に最新の Google Sheets データを参照する（ビルド時の静的生成を無効化）
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function FactoryProxyOrderPage() {
     const products = await getProducts();
 

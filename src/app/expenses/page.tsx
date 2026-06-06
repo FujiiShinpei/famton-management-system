@@ -5,6 +5,10 @@ import { ExpenseForm } from "@/components/expenses/expense-form"
 import { ExpenseList } from "@/components/expenses/expense-list"
 import { getExpenses } from "@/app/actions"
 
+// 常に最新の Google Sheets データを参照する（ビルド時の静的生成を無効化）
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export default async function ExpensesPage() {
     const expenses = await getExpenses()
 

@@ -6,6 +6,10 @@ import { getExpenses } from "@/app/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+// 常に最新の Google Sheets データを参照する（ビルド時の静的生成を無効化）
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function FactoryAdvanceExpensePage() {
     const expenses = await getExpenses();
     const advances = expenses
