@@ -345,6 +345,11 @@ export function OrderForm({ products }: OrderFormProps) {
                             render={({ field }) => (
                                 <FormItem className="space-y-3">
                                     <FormLabel>領収書の発行</FormLabel>
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        領収書は<span className="font-medium">電子領収書（PDF）</span>での発行となります。<br />
+                                        入金確認後にダウンロードURLをメールでお送りしますので、お客様ご自身でダウンロード・印刷していただけます。<br />
+                                        ※紙の領収書の郵送は行っておりません。
+                                    </p>
                                     <FormControl>
                                         <RadioGroup
                                             onValueChange={field.onChange}
