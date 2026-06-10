@@ -99,6 +99,31 @@ export function ProxyOrderForm({ products }: ProxyOrderFormProps) {
     const watchDeliveryMethod = form.watch("delivery_method")
     const watchPrefecture = form.watch("prefecture")
 
+    const [isLookingUpZip, setIsLookingUpZip] = useState(false)
+
+    // 郵便番号から住所を自動取得（zipcloud API・APIキー不要）
+    async function lookupAddress(rawZip: string) {
+        const zip = rawZip.replace(/[^0-9]/g, "")
+        if (zip.length !== 7) return
+        setIsLookingUpZip(true)
+        try {
+            const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`)
+            const data = await res.json()
+            if (data.status === 200 && data.results && data.results.length > 0) {
+                const result = data.results[0]
+                form.setValue("prefecture", result.address1, { shouldValidate: true })
+                form.setValue("address", `${result.address2}${result.address3}`, { shouldValidate: true })
+            } else {
+                toast.error("該当する住所が見つかりませんでした。郵便番号をご確認ください。")
+            }
+        } catch (e) {
+            console.error(e)
+            toast.error("住所の取得に失敗しました。お手数ですが手入力してください。")
+        } finally {
+            setIsLookingUpZip(false)
+        }
+    }
+
     const selectedProduct = products.find(p => p.id === watchProductId)
     const productAmount = selectedProduct && watchQuantity ? selectedProduct.price * watchQuantity : 0
     const shippingCost = watchDeliveryMethod === "配送" && watchPrefecture
@@ -256,8 +281,24 @@ export function ProxyOrderForm({ products }: ProxyOrderFormProps) {
                                         <FormItem>
                                             <FormLabel>郵便番号 <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
-                                                <Input placeholder="123-4567" {...field} />
+                                                <Input
+                                                    placeholder="123-4567"
+                                                    {...field}
+                                                    onChange={(e) => {
+                                                        field.onChange(e)
+                                                        lookupAddress(e.target.value)
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        field.onBlur()
+                                                        lookupAddress(e.target.value)
+                                                    }}
+                                                />
                                             </FormControl>
+                                            <p className="text-xs text-gray-500">
+                                                {isLookingUpZip
+                                                    ? "住所を検索中..."
+                                                    : "郵便番号（7桁）を入力すると都道府県・住所が自動入力されます"}
+                                            </p>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -268,7 +309,7 @@ export function ProxyOrderForm({ products }: ProxyOrderFormProps) {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>都道府県 <span className="text-red-500">*</span></FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="都道府県を選択" />

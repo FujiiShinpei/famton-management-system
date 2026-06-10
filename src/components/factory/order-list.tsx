@@ -24,7 +24,7 @@ interface OrderListProps {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EditOrderDialog } from "./edit-order-dialog"
 import { deleteOrder } from "@/app/actions"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -45,10 +45,14 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [shippingOrderId, setShippingOrderId] = useState<string | null>(null)
     const [advancedShippingCost, setAdvancedShippingCost] = useState<number | ''>('')
+    const [isProcessing, setIsProcessing] = useState(false)
+    const [processingMessage, setProcessingMessage] = useState("処理中...")
 
     async function confirmShipping() {
-        if (!shippingOrderId) return
+        if (!shippingOrderId || isProcessing) return
         const cost = Number(advancedShippingCost) || 0
+        setProcessingMessage("発送完了を記録しています...")
+        setIsProcessing(true)
         try {
             await completeShipping(shippingOrderId, cost)
             toast.success("発送完了として記録しました")
@@ -59,10 +63,14 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
         } finally {
             setShippingOrderId(null)
             setAdvancedShippingCost('')
+            setIsProcessing(false)
         }
     }
 
     async function handlePaymentStatusChange(id: string, newStatus: "未入金" | "入金済") {
+        if (isProcessing) return
+        setProcessingMessage(newStatus === '入金済' ? "入金確認を記録しています..." : "入金状況を更新しています...")
+        setIsProcessing(true)
         try {
             await updatePaymentStatus(id, newStatus)
             toast.success(`入金状況を「${newStatus}」に更新しました`)
@@ -70,11 +78,15 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
         } catch (e) {
             console.error(e)
             toast.error("更新に失敗しました")
+        } finally {
+            setIsProcessing(false)
         }
     }
 
     async function handleConfirmDelete() {
-        if (!deletingId) return
+        if (!deletingId || isProcessing) return
+        setProcessingMessage("注文を削除しています...")
+        setIsProcessing(true)
         try {
             await deleteOrder(deletingId)
             toast.success("注文を削除しました")
@@ -84,6 +96,7 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
             toast.error("削除に失敗しました")
         } finally {
             setDeletingId(null)
+            setIsProcessing(false)
         }
     }
 
@@ -360,6 +373,21 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* 処理中オーバーレイ（連続クリック防止のため画面をロック） */}
+            {isProcessing && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                    role="alertdialog"
+                    aria-busy="true"
+                    aria-label={processingMessage}
+                >
+                    <div className="flex flex-col items-center gap-4 rounded-lg bg-white px-8 py-6 shadow-xl">
+                        <Loader2 className="h-10 w-10 animate-spin text-slate-700" />
+                        <p className="text-sm font-medium text-slate-700">{processingMessage}</p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
