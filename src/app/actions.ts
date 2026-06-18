@@ -95,7 +95,11 @@ ${data.receipt_required ? `🧾 領収書: 希望あり（宛名: ${data.receipt
         receipt_required: data.receipt_required,
         receipt_name: data.receipt_name,
     };
-    sendOrderConfirmationEmail(tempOrder, product).catch(console.error);
+    // 受取方法が「配送」の場合のみ注文確認メール（振込先案内含む）を送信。
+    // 「その他」は手渡し・現金受取のため振込はなく、メールは送信しない。
+    if (data.delivery_method === '配送') {
+        sendOrderConfirmationEmail(tempOrder, product).catch(console.error);
+    }
 
     revalidatePath('/factory', 'layout')
     revalidatePath('/admin')
@@ -219,7 +223,11 @@ export async function updatePaymentStatus(id: string, status: "未入金" | "入
         const products = await googleSheetsService.getProducts();
         if (order) {
             const product = products.find(p => p.id === order.product_id);
-            if (product) {
+            // 「配送」は従来通り入金確認メールを送信。
+            // 「その他」は手渡し・現金受取のため通常はメールを送らないが、
+            // 領収書の希望がある場合のみ領収書の案内メールを送信する。
+            const shouldSendEmail = order.delivery_method === '配送' || order.receipt_required;
+            if (product && shouldSendEmail) {
                 sendPaymentConfirmationEmail(order, product).catch(console.error);
             }
         }

@@ -36,7 +36,7 @@ const formSchema = z.object({
     customer_name: z.string().min(1, "お名前を入力してください"),
     email: z.string().email("有効なメールアドレスを入力してください"),
     product_id: z.string().min(1, "商品を選択してください"),
-    quantity: z.coerce.number().min(1, "1以上の数量を入力してください"),
+    quantity: z.coerce.number().min(1, "1以上の数量を入力してください").max(5, "1度のご注文は5点までとなります"),
     delivery_method: z.enum(["配送", "その他"]),
     postal_code: z.string().optional(),
     prefecture: z.string().optional(),
@@ -152,7 +152,7 @@ export function OrderForm({ products }: OrderFormProps) {
                 receipt_name: values.receipt_choice === "希望する" ? values.receipt_name : undefined,
             })
             toast.success("注文を受け付けました！")
-            router.push(`/success?amount=${estimatedAmount}`)
+            router.push(`/success?amount=${estimatedAmount}&delivery=${encodeURIComponent(values.delivery_method)}`)
         } catch (error) {
             console.error(error)
             toast.error("注文の送信に失敗しました")
@@ -200,8 +200,9 @@ export function OrderForm({ products }: OrderFormProps) {
                                 <FormItem>
                                     <FormLabel>数量 <span className="text-red-500">*</span></FormLabel>
                                     <FormControl>
-                                        <Input type="number" min={1} {...field} />
+                                        <Input type="number" min={1} max={5} {...field} />
                                     </FormControl>
+                                    <p className="text-xs text-gray-500">1度のご注文は5点までとなります。</p>
                                     <FormMessage />
                                 </FormItem>
                             )}

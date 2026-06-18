@@ -10,6 +10,7 @@ type Props = {
 export default async function SuccessPage({ searchParams }: Props) {
   const params = await searchParams
   const amount = params.amount ? parseInt(params.amount as string) : 0
+  const isOther = params.delivery === 'その他'
 
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
@@ -57,6 +58,13 @@ export default async function SuccessPage({ searchParams }: Props) {
               ※ 恐れ入りますが、振込手数料はお客様にてご負担をお願いいたします。<br/>
               ※ ご入金が確認でき次第、商品の受け渡し準備を進めさせていただきます。
             </div>
+
+            {isOther && (
+              <div className="text-xs text-slate-600 bg-blue-50 p-3 rounded-md">
+                ※ 大会等で直接お会いして現金でお支払いいただく場合は、その際のお支払いで大丈夫です。<br/>
+                事前のお振込みは不要ですので、当日お持ちください。
+              </div>
+            )}
 
           </CardContent>
         </Card>
