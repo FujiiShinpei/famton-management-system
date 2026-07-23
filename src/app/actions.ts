@@ -146,6 +146,7 @@ export async function submitProxyOrder(data: {
         shipping_cost: data.shipping_cost,
         receipt_required: data.receipt_required,
         receipt_name: data.receipt_name,
+        is_proxy: true,
     })
 
     // Send LINE Notification (Fire and forget, don't block response)

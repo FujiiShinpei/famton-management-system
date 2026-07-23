@@ -24,7 +24,7 @@ interface OrderListProps {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EditOrderDialog } from "./edit-order-dialog"
 import { deleteOrder } from "@/app/actions"
-import { Edit, Trash2, Loader2 } from "lucide-react"
+import { Edit, Trash2, Loader2, ChevronDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -47,6 +47,7 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
     const [advancedShippingCost, setAdvancedShippingCost] = useState<number | ''>('')
     const [isProcessing, setIsProcessing] = useState(false)
     const [processingMessage, setProcessingMessage] = useState("処理中...")
+    const [showCompleted, setShowCompleted] = useState(false)
 
     async function confirmShipping() {
         if (!shippingOrderId || isProcessing) return
@@ -174,6 +175,14 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                                 <div className="col-span-2">{order.team_name}</div>
                             </div>
                         )}
+                        {order.is_proxy === false && (
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="text-gray-500">領収書</div>
+                                <div className={`col-span-2 ${order.receipt_required ? "font-medium text-blue-600" : "text-gray-500"}`}>
+                                    {order.receipt_required ? "電子で送付" : "希望無し"}
+                                </div>
+                            </div>
+                        )}
                         {order.remarks && (
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="text-gray-500">備考</div>
@@ -246,7 +255,12 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                                 )}
                             </TableCell>
                             <TableCell className="max-w-xs whitespace-pre-wrap text-sm">
-                                {order.remarks}
+                                {order.is_proxy === false && (
+                                    <div className={order.receipt_required ? "font-medium text-blue-600" : "text-gray-500"}>
+                                        {order.receipt_required ? "領収書：電子で送付" : "領収書希望無し"}
+                                    </div>
+                                )}
+                                {order.remarks && <div className="mt-1">{order.remarks}</div>}
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-col gap-1 items-start">
@@ -288,6 +302,18 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
     const unshippedList = orders.filter(o => o.status !== '発送済' && o.status !== 'キャンセル');
     const shippedList = orders.filter(o => o.status === '発送済' || o.status === 'キャンセル');
 
+    // 新しい順（作成日の降順）
+    const sortByNewest = (list: Order[]) =>
+        [...list].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // 完了済み（入金済 かつ 発送済）は折りたたむ。それ以外（発送済だが未入金・キャンセル）は通常表示。
+    const completedList = sortByNewest(
+        shippedList.filter(o => o.payment_status === '入金済' && o.status === '発送済')
+    );
+    const activeShippedList = sortByNewest(
+        shippedList.filter(o => !(o.payment_status === '入金済' && o.status === '発送済'))
+    );
+
     return (
         <div>
             <Tabs defaultValue="unshipped">
@@ -308,14 +334,52 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                 </TabsContent>
 
                 <TabsContent value="shipped">
-                    {/* Mobile View */}
-                    <div className="md:hidden">
-                        {shippedList.length === 0 ? <p className="text-center py-4 text-gray-500">発送済・キャンセルの注文はありません</p> : shippedList.map(renderOrderCard)}
-                    </div>
-                    {/* Desktop View */}
-                    <div className="hidden md:block rounded-md border">
-                        {shippedList.length === 0 ? <p className="text-center py-10 text-gray-500">発送済・キャンセルの注文はありません</p> : renderOrderTable(shippedList)}
-                    </div>
+                    {shippedList.length === 0 ? (
+                        <p className="text-center py-10 text-gray-500">発送済・キャンセルの注文はありません</p>
+                    ) : (
+                        <>
+                            {/* 対応が残っているもの（発送済だが未入金・キャンセル） */}
+                            {/* Mobile View */}
+                            <div className="md:hidden">
+                                {activeShippedList.length === 0
+                                    ? <p className="text-center py-4 text-gray-500">対応中の注文はありません</p>
+                                    : activeShippedList.map(renderOrderCard)}
+                            </div>
+                            {/* Desktop View */}
+                            <div className="hidden md:block rounded-md border">
+                                {activeShippedList.length === 0
+                                    ? <p className="text-center py-10 text-gray-500">対応中の注文はありません</p>
+                                    : renderOrderTable(activeShippedList)}
+                            </div>
+
+                            {/* 完了済み（入金済・発送済）の折りたたみ */}
+                            {completedList.length > 0 && (
+                                <div className="mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCompleted(v => !v)}
+                                        className="flex w-full items-center justify-between rounded-md border bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                    >
+                                        <span>完了した注文（入金済・発送済） {completedList.length}件</span>
+                                        <ChevronDown className={`h-4 w-4 transition-transform ${showCompleted ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {showCompleted && (
+                                        <div className="mt-4">
+                                            {/* Mobile View */}
+                                            <div className="md:hidden">
+                                                {completedList.map(renderOrderCard)}
+                                            </div>
+                                            {/* Desktop View */}
+                                            <div className="hidden md:block rounded-md border">
+                                                {renderOrderTable(completedList)}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </TabsContent>
             </Tabs>
 

@@ -24,6 +24,8 @@ export interface Order {
   // 領収書
   receipt_required?: boolean;
   receipt_name?: string;
+  // 工場スタッフによる代理注文かどうか
+  is_proxy?: boolean;
 }
 
 export interface Product {

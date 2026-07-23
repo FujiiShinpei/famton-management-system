@@ -124,7 +124,7 @@ export class GoogleSheetsService {
             'quantity', 'amount', 'status', 'is_paid_to_worker', 
             'delivery_method', 'postal_code', 'address', 'phone_number', 
             'team_name', 'remarks', 'payment_status', 'advanced_shipping_cost',
-            'prefecture', 'shipping_cost', 'receipt_required', 'receipt_name'
+            'prefecture', 'shipping_cost', 'receipt_required', 'receipt_name', 'is_proxy'
         ];
         const currentHeaders = sheet.headerValues || [];
         let updated = false;
@@ -187,6 +187,13 @@ export class GoogleSheetsService {
             shipping_cost: row.get('shipping_cost') ? Number(row.get('shipping_cost')) : undefined,
             receipt_required: row.get('receipt_required') === 'TRUE',
             receipt_name: row.get('receipt_name') || undefined,
+            // 過去データ（is_proxy 欄が空）は undefined のまま保持し、
+            // 「これからの注文」（TRUE/FALSE が入っているもの）と区別する
+            is_proxy: (() => {
+                const v = row.get('is_proxy');
+                if (v === undefined || v === '') return undefined;
+                return v === 'TRUE';
+            })(),
         }));
     }
 
@@ -231,6 +238,7 @@ export class GoogleSheetsService {
             shipping_cost: newOrder.shipping_cost || 0,
             receipt_required: newOrder.receipt_required ? 'TRUE' : 'FALSE',
             receipt_name: newOrder.receipt_name || '',
+            is_proxy: newOrder.is_proxy ? 'TRUE' : 'FALSE',
         });
     }
 
