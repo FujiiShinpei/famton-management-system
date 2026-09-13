@@ -127,6 +127,24 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
         return <Badge variant="destructive">未入金</Badge>
     }
 
+    // 領収書区分を判定。過去データ・代理注文（is_proxy が false 以外）は表示しない。
+    // receipt_type が無い旧データは receipt_required から電子/無しに読み替える。
+    const getReceiptType = (order: Order): "電子" | "紙" | "無し" | null => {
+        if (order.is_proxy !== false) return null
+        return order.receipt_type ?? (order.receipt_required ? "電子" : "無し")
+    }
+
+    // 注文経路（代理注文 / Web注文）のバッジ。過去データ（is_proxy が未設定）は表示しない
+    const getSourceBadge = (order: Order) => {
+        if (order.is_proxy === true) {
+            return <Badge className="bg-orange-500 hover:bg-orange-600">代理注文</Badge>
+        }
+        if (order.is_proxy === false) {
+            return <Badge className="bg-sky-600 hover:bg-sky-700">Web注文</Badge>
+        }
+        return null
+    }
+
     const renderOrderCard = (order: Order) => {
         const product = products.find(p => p.id === order.product_id);
         return (
@@ -134,7 +152,8 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                 <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
                         <span className="font-bold text-lg">{order.customer_name} 様</span>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap justify-end">
+                            {getSourceBadge(order)}
                             {getPaymentBadge(order.payment_status)}
                             {getStatusBadge(order.status)}
                         </div>
@@ -160,7 +179,7 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                                     <div className="text-gray-500">住所</div>
                                     <div className="col-span-2">
                                         〒{order.postal_code}<br />
-                                        {order.address}
+                                        {order.prefecture}{order.address}
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
@@ -175,14 +194,20 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                                 <div className="col-span-2">{order.team_name}</div>
                             </div>
                         )}
-                        {order.is_proxy === false && (
-                            <div className="grid grid-cols-3 gap-2">
-                                <div className="text-gray-500">領収書</div>
-                                <div className={`col-span-2 ${order.receipt_required ? "font-medium text-blue-600" : "text-gray-500"}`}>
-                                    {order.receipt_required ? "電子で送付" : "希望無し"}
+                        {(() => {
+                            const t = getReceiptType(order)
+                            if (!t) return null
+                            const text = t === "電子" ? "電子で送付" : t === "紙" ? "紙で発行（別途連絡）" : "希望無し"
+                            const cls = t === "紙" ? "font-medium text-red-600" : t === "電子" ? "font-medium text-blue-600" : "text-gray-500"
+                            return (
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="text-gray-500">領収書</div>
+                                    <div className={`col-span-2 ${cls}`}>
+                                        {text}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )
+                        })()}
                         {order.remarks && (
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="text-gray-500">備考</div>
@@ -249,21 +274,28 @@ export function OrderList({ initialOrders, products }: OrderListProps) {
                                 {order.delivery_method === '配送' && (
                                     <div className="text-sm mt-1">
                                         <div>〒{order.postal_code}</div>
-                                        <div>{order.address}</div>
+                                        <div>{order.prefecture}{order.address}</div>
                                         <div>{order.phone_number}</div>
                                     </div>
                                 )}
                             </TableCell>
                             <TableCell className="max-w-xs whitespace-pre-wrap text-sm">
-                                {order.is_proxy === false && (
-                                    <div className={order.receipt_required ? "font-medium text-blue-600" : "text-gray-500"}>
-                                        {order.receipt_required ? "領収書：電子で送付" : "領収書希望無し"}
-                                    </div>
-                                )}
+                                {(() => {
+                                    const t = getReceiptType(order)
+                                    if (!t) return null
+                                    const text = t === "電子" ? "領収書：電子で送付" : t === "紙" ? "領収書：紙で発行（別途連絡）" : "領収書希望無し"
+                                    const cls = t === "紙" ? "font-medium text-red-600" : t === "電子" ? "font-medium text-blue-600" : "text-gray-500"
+                                    return (
+                                        <div className={cls}>
+                                            {text}
+                                        </div>
+                                    )
+                                })()}
                                 {order.remarks && <div className="mt-1">{order.remarks}</div>}
                             </TableCell>
                             <TableCell>
                                 <div className="flex flex-col gap-1 items-start">
+                                    {getSourceBadge(order)}
                                     {getPaymentBadge(order.payment_status)}
                                     {getStatusBadge(order.status)}
                                 </div>

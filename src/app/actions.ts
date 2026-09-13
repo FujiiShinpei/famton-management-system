@@ -25,6 +25,7 @@ export async function submitOrder(data: {
     shipping_cost?: number;
     receipt_required?: boolean;
     receipt_name?: string;
+    receipt_type?: "電子" | "紙" | "無し";
 }) {
     const products = await googleSheetsService.getProducts()
     const product = products.find(p => p.id === data.product_id)
@@ -51,6 +52,7 @@ export async function submitOrder(data: {
         shipping_cost: data.shipping_cost,
         receipt_required: data.receipt_required,
         receipt_name: data.receipt_name,
+        receipt_type: data.receipt_type,
     })
 
     // Send LINE Notification (Fire and forget, don't block response)
@@ -94,6 +96,7 @@ ${data.receipt_required ? `🧾 領収書: 希望あり（宛名: ${data.receipt
         shipping_cost: data.shipping_cost,
         receipt_required: data.receipt_required,
         receipt_name: data.receipt_name,
+        receipt_type: data.receipt_type,
     };
     // 受取方法が「配送」の場合のみ注文確認メール（振込先案内含む）を送信。
     // 「その他」は手渡し・現金受取のため振込はなく、メールは送信しない。
@@ -226,8 +229,12 @@ export async function updatePaymentStatus(id: string, status: "未入金" | "入
             const product = products.find(p => p.id === order.product_id);
             // 「配送」は従来通り入金確認メールを送信。
             // 「その他」は手渡し・現金受取のため通常はメールを送らないが、
-            // 領収書の希望がある場合のみ領収書の案内メールを送信する。
-            const shouldSendEmail = order.delivery_method === '配送' || order.receipt_required;
+            // 電子領収書の希望がある場合のみ領収書の案内メールを送信する。
+            // （紙の領収書は別途手配のため自動メールは送らない）
+            const isElectronicReceipt = order.receipt_type
+                ? order.receipt_type === '電子'
+                : !!order.receipt_required;
+            const shouldSendEmail = order.delivery_method === '配送' || isElectronicReceipt;
             if (product && shouldSendEmail) {
                 sendPaymentConfirmationEmail(order, product).catch(console.error);
             }

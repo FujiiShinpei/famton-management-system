@@ -24,6 +24,8 @@ export interface Order {
   // 領収書
   receipt_required?: boolean;
   receipt_name?: string;
+  // 領収書の区分: 電子 / 紙（別途連絡） / 無し
+  receipt_type?: "電子" | "紙" | "無し";
   // 工場スタッフによる代理注文かどうか
   is_proxy?: boolean;
 }

@@ -75,7 +75,10 @@ export async function sendPaymentConfirmationEmail(order: Order, product: Produc
   const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'https://famton-online.com').replace(/\/$/, '');
   const receiptUrl = `${baseUrl}/receipt/${order.id}`;
 
-  const receiptSection = order.receipt_required
+  const isElectronicReceipt = order.receipt_type
+    ? order.receipt_type === '電子'
+    : !!order.receipt_required;
+  const receiptSection = isElectronicReceipt
     ? `
 【領収書のご案内】
 ご希望いただいた領収書は、以下のURLから発行（ダウンロード）いただけます。

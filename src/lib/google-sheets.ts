@@ -124,7 +124,7 @@ export class GoogleSheetsService {
             'quantity', 'amount', 'status', 'is_paid_to_worker', 
             'delivery_method', 'postal_code', 'address', 'phone_number', 
             'team_name', 'remarks', 'payment_status', 'advanced_shipping_cost',
-            'prefecture', 'shipping_cost', 'receipt_required', 'receipt_name', 'is_proxy'
+            'prefecture', 'shipping_cost', 'receipt_required', 'receipt_name', 'is_proxy', 'receipt_type'
         ];
         const currentHeaders = sheet.headerValues || [];
         let updated = false;
@@ -194,6 +194,7 @@ export class GoogleSheetsService {
                 if (v === undefined || v === '') return undefined;
                 return v === 'TRUE';
             })(),
+            receipt_type: (row.get('receipt_type') as "電子" | "紙" | "無し") || undefined,
         }));
     }
 
@@ -239,6 +240,7 @@ export class GoogleSheetsService {
             receipt_required: newOrder.receipt_required ? 'TRUE' : 'FALSE',
             receipt_name: newOrder.receipt_name || '',
             is_proxy: newOrder.is_proxy ? 'TRUE' : 'FALSE',
+            receipt_type: newOrder.receipt_type || '',
         });
     }
 
@@ -387,6 +389,7 @@ export class GoogleSheetsService {
             if (updates.amount) row.set('amount', updates.amount);
             if (updates.delivery_method) row.set('delivery_method', updates.delivery_method);
             if (updates.postal_code !== undefined) row.set('postal_code', updates.postal_code);
+            if (updates.prefecture !== undefined) row.set('prefecture', updates.prefecture);
             if (updates.address !== undefined) row.set('address', updates.address);
             if (updates.phone_number !== undefined) row.set('phone_number', updates.phone_number);
             if (updates.team_name !== undefined) row.set('team_name', updates.team_name);
@@ -396,6 +399,7 @@ export class GoogleSheetsService {
             if (updates.advanced_shipping_cost !== undefined) row.set('advanced_shipping_cost', updates.advanced_shipping_cost);
             if (updates.receipt_required !== undefined) row.set('receipt_required', updates.receipt_required ? 'TRUE' : 'FALSE');
             if (updates.receipt_name !== undefined) row.set('receipt_name', updates.receipt_name);
+            if (updates.receipt_type !== undefined) row.set('receipt_type', updates.receipt_type);
             await row.save();
         }
     }

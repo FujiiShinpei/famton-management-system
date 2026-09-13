@@ -150,6 +150,7 @@ export function OrderForm({ products }: OrderFormProps) {
                 shipping_cost: shippingCost,
                 receipt_required: values.receipt_choice === "希望する",
                 receipt_name: values.receipt_choice === "希望する" ? values.receipt_name : undefined,
+                receipt_type: values.receipt_choice === "希望する" ? "電子" : "無し",
             })
             toast.success("注文を受け付けました！")
             router.push(`/success?amount=${estimatedAmount}&delivery=${encodeURIComponent(values.delivery_method)}`)

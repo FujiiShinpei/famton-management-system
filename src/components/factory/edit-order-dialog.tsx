@@ -34,14 +34,18 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { PREFECTURES } from "@/lib/shipping-rates"
 
 const formSchema = z.object({
     status: z.enum(["未対応", "製造中", "発送済", "キャンセル"]),
     customer_name: z.string().min(1, "お名前を入力してください"),
+    email: z.string().email("有効なメールアドレスを入力してください").or(z.literal("")),
+    receipt_type: z.enum(["電子", "紙", "無し"]),
     product_id: z.string().min(1, "商品を選択してください"),
     quantity: z.coerce.number().min(1, "1以上の数量を入力してください"),
     delivery_method: z.enum(["配送", "その他"]),
     postal_code: z.string().optional(),
+    prefecture: z.string().optional(),
     address: z.string().optional(),
     phone_number: z.string().optional(),
     team_name: z.string().optional(),
@@ -62,10 +66,13 @@ export function EditOrderDialog({ order, products, isOpen, onOpenChange, onSucce
         defaultValues: {
             status: "未対応",
             customer_name: "",
+            email: "",
+            receipt_type: "無し",
             product_id: "",
             quantity: 1,
             delivery_method: "その他",
             postal_code: "",
+            prefecture: "",
             address: "",
             phone_number: "",
             team_name: "",
@@ -74,10 +81,13 @@ export function EditOrderDialog({ order, products, isOpen, onOpenChange, onSucce
         values: order ? {
             status: order.status,
             customer_name: order.customer_name,
+            email: order.email || "",
+            receipt_type: order.receipt_type ?? (order.receipt_required ? "電子" : "無し"),
             product_id: order.product_id,
             quantity: order.quantity,
             delivery_method: order.delivery_method,
             postal_code: order.postal_code || "",
+            prefecture: order.prefecture || "",
             address: order.address || "",
             phone_number: order.phone_number || "",
             team_name: order.team_name || "",
@@ -98,6 +108,8 @@ export function EditOrderDialog({ order, products, isOpen, onOpenChange, onSucce
             const updates = {
                 ...values,
                 amount,
+                // 領収書区分に合わせて receipt_required を同期（電子・紙＝有り、無し＝無し）
+                receipt_required: values.receipt_type !== "無し",
             }
 
             await updateOrder(order.id, updates)
@@ -151,6 +163,43 @@ export function EditOrderDialog({ order, products, isOpen, onOpenChange, onSucce
                                     <FormControl>
                                         <Input {...field} />
                                     </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>メールアドレス</FormLabel>
+                                    <FormControl>
+                                        <Input type="email" placeholder="example@gmail.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="receipt_type"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>領収書</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="領収書の区分を選択" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="電子">電子で送付</SelectItem>
+                                            <SelectItem value="紙">紙で発行（別途連絡）</SelectItem>
+                                            <SelectItem value="無し">無し</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -234,6 +283,28 @@ export function EditOrderDialog({ order, products, isOpen, onOpenChange, onSucce
                                         <FormItem>
                                             <FormLabel>郵便番号</FormLabel>
                                             <FormControl><Input {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="prefecture"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>都道府県</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="都道府県を選択" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {PREFECTURES.map((pref) => (
+                                                        <SelectItem key={pref} value={pref}>{pref}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}
