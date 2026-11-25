@@ -72,7 +72,7 @@ export default async function SuccessPage({ searchParams }: Props) {
         <div className="text-center">
           <Button asChild className="w-full">
             <Link href="/">
-              注文ページへ戻る
+              トップページへ戻る
             </Link>
           </Button>
         </div>

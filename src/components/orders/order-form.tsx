@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Product } from "@/lib/types"
 import { PREFECTURES, calculateShippingCost } from "@/lib/shipping-rates"
+import { DELAY_NOTICE } from "@/lib/notice"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -465,6 +466,12 @@ export function OrderForm({ products }: OrderFormProps) {
                                 <span>¥{estimatedAmount.toLocaleString()}</span>
                             </div>
                         </div>
+
+                        {DELAY_NOTICE.enabled && (
+                            <p className="rounded-md bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+                                ※ 現在、お届けまで<span className="font-bold">1か月以上</span>お待ちいただく見込みです。ご了承のうえご注文ください。
+                            </p>
+                        )}
 
                         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                             {form.formState.isSubmitting ? "送信中..." : "注文を確定する"}

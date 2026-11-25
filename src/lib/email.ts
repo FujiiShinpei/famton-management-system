@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { Order, Product } from './types';
+import { DELAY_NOTICE } from './notice';
 
 // SMTP config
 const transporter = nodemailer.createTransport({
@@ -54,7 +55,7 @@ ${order.delivery_method === '配送' ? `・お届け先: 〒${order.postal_code}
 口座番号: 8970299
 口座名義: ﾌｼﾞｲｼﾞﾑｼｮ ﾌｼﾞｲｼﾝﾍﾟｲ
 
-入金確認後、または発送準備が整い次第、改めてご連絡いたします。
+${DELAY_NOTICE.enabled ? `【製造遅延のお知らせ】\n${DELAY_NOTICE.message}\n\n` : ''}入金確認後、または発送準備が整い次第、改めてご連絡いたします。
 引き続きよろしくお願いいたします。
     `.trim(),
   };

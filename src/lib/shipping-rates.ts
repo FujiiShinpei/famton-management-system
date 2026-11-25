@@ -79,7 +79,7 @@ function getSizeGroup(quantity: number): SizeGroup {
 }
 
 // ゾーン × サイズ 送料テーブル (円)
-const SHIPPING_RATE_TABLE: Record<Zone, Record<SizeGroup, number>> = {
+export const SHIPPING_RATE_TABLE: Record<Zone, Record<SizeGroup, number>> = {
     kinki:            { small: 600,  medium: 800, large: 1000 },
     chubu_chugoku:    { small: 600,  medium: 800, large: 1000 },
     kanto:            { small: 650,  medium: 850, large: 1100 },
@@ -88,6 +88,17 @@ const SHIPPING_RATE_TABLE: Record<Zone, Record<SizeGroup, number>> = {
     kyushu:           { small: 700,  medium: 850, large: 1100 },
     okinawa:          { small: 1900, medium: 2600, large: 3200 },
 };
+
+// トップページの送料表で使う表示用の地域名（表示順）
+export const ZONE_DISPLAY: { zone: Zone; label: string }[] = [
+    { zone: 'kinki', label: '近畿' },
+    { zone: 'chubu_chugoku', label: '中部・中国・四国' },
+    { zone: 'kanto', label: '関東' },
+    { zone: 'kyushu', label: '九州' },
+    { zone: 'tohoku_hokuriku', label: '東北・北陸・新潟' },
+    { zone: 'hokkaido', label: '北海道' },
+    { zone: 'okinawa', label: '沖縄' },
+];
 
 /**
  * 都道府県と数量（ダース数）から送料を計算する
